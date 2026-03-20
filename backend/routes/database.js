@@ -340,13 +340,19 @@ router.post('/importar-matriz', verifyToken, async (req, res) => {
 
   function toNum(val) {
     if (val === null || val === undefined || val === '') return null;
-    if (typeof val === 'number') return isFinite(val) ? val : null;
+    if (typeof val === 'number') {
+      if (!isFinite(val)) return null;
+      const clamped = Math.min(Math.abs(val), 9999999999.99);
+      return val < 0 ? -clamped : clamped;
+    }
     const s = String(val).trim().replace(/\s/g,'').replace(/R\$/gi,'');
     let clean = s;
     if (s.includes(',') && s.includes('.')) clean = s.replace(/,/g,'');
     else if (s.includes(',')) clean = s.replace(/,/g,'.');
     const n = parseFloat(clean.replace(/[^0-9.-]/g,''));
-    return isFinite(n) ? n : null;
+    if (!isFinite(n)) return null;
+    const clamped = Math.min(Math.abs(n), 9999999999.99);
+    return n < 0 ? -clamped : clamped;
   }
 
   function toDate(val) {
@@ -488,13 +494,19 @@ router.post('/importar-filiais', verifyToken, async (req, res) => {
 
   function toNum(val) {
     if (val === null || val === undefined || val === '') return null;
-    if (typeof val === 'number') return isFinite(val) ? val : null;
+    if (typeof val === 'number') {
+      if (!isFinite(val)) return null;
+      const clamped = Math.min(Math.abs(val), 9999999999.99);
+      return val < 0 ? -clamped : clamped;
+    }
     const s = String(val).trim().replace(/\s/g,'').replace(/R\$/gi,'');
     let clean = s;
     if (s.includes(',') && s.includes('.')) clean = s.replace(/,/g,'');
     else if (s.includes(',')) clean = s.replace(/,/g,'.');
     const n = parseFloat(clean.replace(/[^0-9.-]/g,''));
-    return isFinite(n) ? n : null;
+    if (!isFinite(n)) return null;
+    const clamped = Math.min(Math.abs(n), 9999999999.99);
+    return n < 0 ? -clamped : clamped;
   }
 
   function sanitizar(r) {
