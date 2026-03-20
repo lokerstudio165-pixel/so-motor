@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Só Motor — Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Leaflet CSS via CDN — obrigatório para o mapa renderizar -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+      /* Filtro dark para o mapa OpenStreetMap */
+      .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.6); }
+      .leaflet-container { background: #1a1a1a !important; }
+      /* Mantém marcadores e popups sem o filtro */
+      .leaflet-marker-pane,
+      .leaflet-shadow-pane,
+      .leaflet-overlay-pane,
+      .leaflet-popup-pane,
+      .leaflet-tooltip-pane { filter: none !important; }
+    </style>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { background: #0d0d0d; color: #f0f0f0; font-family: 'DM Sans', sans-serif; }
+      #root { min-height: 100vh; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

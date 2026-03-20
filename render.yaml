@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: somotor-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: DB_SSL
+        value: require
+      - key: JWT_SECRET
+        generateValue: true
+      # Preencha no painel do Render:
+      # DATABASE_URL  → connection string do Neon
+      # FRONTEND_URL  → URL do seu deploy na Vercel
