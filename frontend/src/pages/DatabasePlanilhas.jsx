@@ -207,7 +207,8 @@ function PanelFontes({ pgStatus, pgLimpo, sheetLimpa, clearing, clearMsg, onClea
         dadosBrutos = XLSX.utils.sheet_to_json(ws, { defval:null, raw:true });
       } else if (ext === 'csv') {
         const text = await file.text();
-        const sep  = text.slice(0,500).split(';').length >= text.slice(0,500).split(',').length ? ';' : ',';
+        const sample = text.slice(0,1000);
+        const sep  = (sample.split(';').length - 1) >= (sample.split(',').length - 1) ? ';' : ',';
         const lines = text.split(/\r?\n/).filter(l=>l.trim());
         const headers = lines[0].split(sep).map(h=>h.replace(/^"|"$/g,'').trim()).filter(Boolean);
         dadosBrutos = lines.slice(1).map(line => {
@@ -1343,7 +1344,8 @@ function PanelFiliais({ onImported }) {
 
       if (ext === 'csv') {
         const text = await file.text();
-        const sep  = text.slice(0,500).split(';').length >= text.slice(0,500).split(',').length ? ';' : ',';
+        const sample = text.slice(0,1000);
+        const sep  = (sample.split(';').length - 1) >= (sample.split(',').length - 1) ? ';' : ',';
         const lines = text.split(/\r?\n/).filter(l => l.trim());
         const headers = lines[0].split(sep).map(h => h.replace(/^"|"$/g,'').trim()).filter(Boolean);
         dadosBrutos = lines.slice(1).map(line => {
