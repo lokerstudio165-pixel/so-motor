@@ -220,6 +220,13 @@ function PanelFontes({ pgStatus, pgLimpo, sheetLimpa, clearing, clearMsg, onClea
 
       if (!dadosBrutos.length) throw new Error('Arquivo vazio.');
 
+      // Normaliza chaves para minusculo
+      dadosBrutos = dadosBrutos.map(row => {
+        const n = {};
+        for (const [k, v] of Object.entries(row)) n[k.trim().toLowerCase().replace(/\s+/g,'_')] = v;
+        return n;
+      });
+
       const keys = Object.keys(dadosBrutos[0]||{}).map(k=>k.trim().toLowerCase());
       const isFiliais = keys.includes('filial') || keys.includes('saldo_estoque_filial');
       const isMatriz  = keys.includes('saldo_estoque_cd') || keys.includes('qtd_ago25');
