@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 
-const API = (import.meta.env.VITE_API_URL || 'http://localhost:3001') + '/api';
+const API = (import.meta.env.VITE_API_URL || 'https://so-motor.onrender.com') + '/api';
 
 async function apiFetch(path, opts = {}) {
   const token = localStorage.getItem('sm_token');
@@ -155,7 +155,7 @@ function PanelFontes({ pgStatus, pgLimpo, sheetLimpa, clearing, clearMsg, onClea
   const [importMsg,    setImportMsg]    = useState('');
   const [importMode,   setImportMode]   = useState('substituir');
   const importRef = useRef(null);
-  const API = (import.meta.env.VITE_API_URL || 'http://localhost:3001') + '/api';
+  const API = (import.meta.env.VITE_API_URL || 'https://so-motor.onrender.com') + '/api';
 
   async function verificarBanco() {
     setLoadingDb(true);
