@@ -338,12 +338,47 @@ router.post('/importar-matriz', verifyToken, async (req, res) => {
   const CAMPOS_TEXTO = new Set(['referencia','descricao','grupo','sub_grupo','codigo_barras',
     'fornecedor_ult','fornecedor_pen','fornecedor_ante','status_produto','status_cobertura']);
 
-  function toNum(val) {
+  // Limites exatos por campo baseados nos tipos NUMERIC do banco
+  const CAMPO_LIMITES = {
+    cobertura_meses_cd:       [999999.99,    -999999.99],
+    giro_estoque_cd:          [999999.99,    -999999.99],
+    margem_pct:               [999999.99,    -999999.99],
+    cobertura_dias_cd:        [99999999,     -99999999],
+    dias_sem_compra:          [99999999,     0],
+    qtd_notas_6m:             [99999999,     0],
+    meses_com_saida_cd:       [9999,         0],
+    variacao_ult_vs_media_pct:[99999999.99,  -99999999.99],
+    variacao_ult_pen_pct:     [99999999.99,  -99999999.99],
+    variacao_ult_ante_pct:    [99999999.99,  -99999999.99],
+    desconto_ult_compra:      [999999.99,    -999999.99],
+    desconto_pen_compra:      [999999.99,    -999999.99],
+    perc_ipi_ult:             [999999.99,    -999999.99],
+    perc_icms_ult:            [999999.99,    -999999.99],
+    custo_medio_estoque:      [99999999.9999,-99999999.9999],
+    preco_medio_saida:        [99999999.9999,-99999999.9999],
+    custo_medio_compra_6m:    [99999999.9999,-99999999.9999],
+    vlr_ult_compra:           [99999999.9999,-99999999.9999],
+    vlr_pen_compra:           [99999999.9999,-99999999.9999],
+    vlr_ante_compra:          [99999999.9999,-99999999.9999],
+    custo_efetivo_ult_compra: [99999999.9999,-99999999.9999],
+    vlr_ipi_ult:              [9999999999.99,-9999999999.99],
+    vlr_icms_ult:             [9999999999.99,-9999999999.99],
+    vlr_ipi_pen:              [9999999999.99,-9999999999.99],
+    vlr_icms_pen:             [9999999999.99,-9999999999.99],
+  };
+  const NUMERIC14_MAX = 999999999999.99;
+
+  function clampForField(campo, n) {
+    const limits = CAMPO_LIMITES[campo];
+    if (limits) return Math.min(Math.max(n, limits[1]), limits[0]);
+    return Math.min(Math.max(n, -NUMERIC14_MAX), NUMERIC14_MAX);
+  }
+
+  function toNum(val, campo) {
     if (val === null || val === undefined || val === '') return null;
     if (typeof val === 'number') {
       if (!isFinite(val)) return null;
-      const clamped = Math.min(Math.abs(val), 9999999999.99);
-      return val < 0 ? -clamped : clamped;
+      return campo ? clampForField(campo, val) : val;
     }
     const s = String(val).trim().replace(/\s/g,'').replace(/R\$/gi,'');
     let clean = s;
@@ -351,15 +386,27 @@ router.post('/importar-matriz', verifyToken, async (req, res) => {
     else if (s.includes(',')) clean = s.replace(/,/g,'.');
     const n = parseFloat(clean.replace(/[^0-9.-]/g,''));
     if (!isFinite(n)) return null;
-    const clamped = Math.min(Math.abs(n), 9999999999.99);
-    return n < 0 ? -clamped : clamped;
+    return campo ? clampForField(campo, n) : n;
   }
 
   function toDate(val) {
     if (val === null || val === undefined || val === '') return null;
     if (val instanceof Date) return isNaN(val) ? null : val.toISOString().slice(0,10);
+    // Número serial do Excel (ex: 45946) — converte para data
+    if (typeof val === 'number' && isFinite(val) && val > 1 && val < 100000) {
+      const epoch = new Date(Date.UTC(1899, 11, 30));
+      epoch.setUTCDate(epoch.getUTCDate() + Math.floor(val));
+      return epoch.toISOString().slice(0, 10);
+    }
     const s = String(val).trim();
     if (!s || s === 'null') return null;
+    // Formato JS Date.toString(): "Thu Oct 16 2025 00:00:28 GMT-0300 (...)"
+    const jsDate = s.match(/^[A-Za-z]{3}\s+([A-Za-z]{3})\s+(\d{1,2})\s+(\d{4})/);
+    if (jsDate) {
+      const months = {Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};
+      const m = months[jsDate[1]];
+      if (m) return `${jsDate[3]}-${m}-${jsDate[2].padStart(2,'0')}`;
+    }
     // dd/mm/yy ou dd/mm/yyyy
     const br = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
     if (br) {
@@ -379,7 +426,7 @@ router.post('/importar-matriz', verifyToken, async (req, res) => {
       const val = r[campo] ?? null;
       if (CAMPOS_DATA.has(campo))   out[campo] = toDate(val);
       else if (CAMPOS_TEXTO.has(campo)) out[campo] = val ? String(val).trim().slice(0,255) || null : null;
-      else out[campo] = toNum(val);
+      else out[campo] = toNum(val, campo);
     }
     return out;
   }
@@ -404,9 +451,9 @@ router.post('/importar-matriz', verifyToken, async (req, res) => {
         CAMPOS.forEach(c => params.push(s[c]));
       }
       await client.query(
-        `INSERT INTO estoque_matriz (${CAMPOS.join(',')}) VALUES ${values.join(',')}`,
-        params
-      );
+          `INSERT INTO estoque_matriz (${CAMPOS.join(',')}) VALUES ${values.join(',')}`,
+          params
+        );
       inserted += batch.length;
     }
 
@@ -494,19 +541,13 @@ router.post('/importar-filiais', verifyToken, async (req, res) => {
 
   function toNum(val) {
     if (val === null || val === undefined || val === '') return null;
-    if (typeof val === 'number') {
-      if (!isFinite(val)) return null;
-      const clamped = Math.min(Math.abs(val), 9999999999.99);
-      return val < 0 ? -clamped : clamped;
-    }
+    if (typeof val === 'number') return isFinite(val) ? val : null;
     const s = String(val).trim().replace(/\s/g,'').replace(/R\$/gi,'');
     let clean = s;
     if (s.includes(',') && s.includes('.')) clean = s.replace(/,/g,'');
     else if (s.includes(',')) clean = s.replace(/,/g,'.');
     const n = parseFloat(clean.replace(/[^0-9.-]/g,''));
-    if (!isFinite(n)) return null;
-    const clamped = Math.min(Math.abs(n), 9999999999.99);
-    return n < 0 ? -clamped : clamped;
+    return isFinite(n) ? n : null;
   }
 
   function sanitizar(r) {
@@ -673,3 +714,4 @@ router.get('/filiais', verifyToken, async (req, res) => {
 });
 
 module.exports = router;
+
