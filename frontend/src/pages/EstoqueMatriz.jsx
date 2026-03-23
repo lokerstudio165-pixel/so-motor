@@ -311,8 +311,8 @@ export default function EstoqueMatriz() {
       let dadosBrutos = [];
       if(ext==='xlsx'||ext==='xls'){
         const buf = await file.arrayBuffer();
-        const wb  = XLSX.read(buf,{type:'array',cellDates:true,raw:true});
-        dadosBrutos = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:null,raw:true});
+        const wb  = XLSX.read(buf,{type:'array',cellDates:true,raw:false});
+        dadosBrutos = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:null,raw:false,dateNF:'yyyy-mm-dd'});
       } else if(ext==='csv'){
         const text = await file.text();
         const sep  = text.slice(0,500).split(';').length>=text.slice(0,500).split(',').length?';':',';
