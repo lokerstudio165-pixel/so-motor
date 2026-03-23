@@ -58,15 +58,15 @@ async function runMigrations() {
         saldo_estoque_filial    NUMERIC(14,2) DEFAULT 0,
         custo_medio_filial      NUMERIC(12,4) DEFAULT 0,
         valor_estoque_filial    NUMERIC(14,2) DEFAULT 0,
-        cobertura_meses_filial  NUMERIC(8,2)  DEFAULT 0,
-        cobertura_dias_filial   NUMERIC(8,0)  DEFAULT 0,
+        cobertura_meses_filial  NUMERIC(12,2)  DEFAULT 0,
+        cobertura_dias_filial   NUMERIC(12,0)  DEFAULT 0,
         status_cobertura_filial VARCHAR(30),
-        giro_estoque_filial     NUMERIC(8,2)  DEFAULT 0,
+        giro_estoque_filial     NUMERIC(12,2)  DEFAULT 0,
         qtd_vendida_filial_6m   NUMERIC(14,2) DEFAULT 0,
         vlr_vendido_filial_6m   NUMERIC(14,2) DEFAULT 0,
         qtd_vendida_filial_mes  NUMERIC(14,2) DEFAULT 0,
         vlr_vendido_filial_mes  NUMERIC(14,2) DEFAULT 0,
-        meses_com_venda_filial  NUMERIC(4,0)  DEFAULT 0,
+        meses_com_venda_filial  NUMERIC(8,0)  DEFAULT 0,
         media_mensal_qtd_filial NUMERIC(14,2) DEFAULT 0,
         preco_medio_venda_filial NUMERIC(12,4) DEFAULT 0,
         qtd_mes1  NUMERIC(14,2) DEFAULT 0, vlr_mes1  NUMERIC(14,2) DEFAULT 0,
@@ -77,7 +77,7 @@ async function runMigrations() {
         qtd_mes6  NUMERIC(14,2) DEFAULT 0, vlr_mes6  NUMERIC(14,2) DEFAULT 0,
         qtd_recebida_nsd_6m     NUMERIC(14,2) DEFAULT 0,
         vlr_recebido_nsd_6m     NUMERIC(14,2) DEFAULT 0,
-        margem_pct_filial       NUMERIC(8,2)  DEFAULT 0,
+        margem_pct_filial       NUMERIC(12,2)  DEFAULT 0,
         lucro_bruto_filial_6m   NUMERIC(14,2) DEFAULT 0,
         importado_em            TIMESTAMP DEFAULT NOW()
       );
@@ -101,10 +101,10 @@ async function runMigrations() {
         saldo_estoque_cd        NUMERIC(14,2) DEFAULT 0,
         custo_medio_estoque     NUMERIC(12,4) DEFAULT 0,
         valor_estoque_cd        NUMERIC(14,2) DEFAULT 0,
-        cobertura_meses_cd      NUMERIC(8,2)  DEFAULT 0,
-        cobertura_dias_cd       NUMERIC(8,0)  DEFAULT 0,
+        cobertura_meses_cd      NUMERIC(12,2)  DEFAULT 0,
+        cobertura_dias_cd       NUMERIC(12,0)  DEFAULT 0,
         status_cobertura        VARCHAR(30),
-        giro_estoque_cd         NUMERIC(8,2)  DEFAULT 0,
+        giro_estoque_cd         NUMERIC(12,2)  DEFAULT 0,
         qtd_total_saida_cd_6m   NUMERIC(14,2) DEFAULT 0,
         vlr_total_saida_cd_6m   NUMERIC(14,2) DEFAULT 0,
         qtd_transferida_6m      NUMERIC(14,2) DEFAULT 0,
@@ -113,7 +113,7 @@ async function runMigrations() {
         vlr_venda_direta_cd_6m  NUMERIC(14,2) DEFAULT 0,
         qtd_saida_cd_mes        NUMERIC(14,2) DEFAULT 0,
         vlr_saida_cd_mes        NUMERIC(14,2) DEFAULT 0,
-        meses_com_saida_cd      NUMERIC(4,0)  DEFAULT 0,
+        meses_com_saida_cd      NUMERIC(8,0)  DEFAULT 0,
 
         -- Histórico mensal nomeado (ago25 → jan26)
         qtd_ago25  NUMERIC(14,2) DEFAULT 0,  vlr_ago25  NUMERIC(14,2) DEFAULT 0,
@@ -136,9 +136,9 @@ async function runMigrations() {
         vlr_ult_compra          NUMERIC(12,4) DEFAULT 0,
         qtd_ult_compra          NUMERIC(14,2) DEFAULT 0,
         desconto_ult_compra     NUMERIC(8,2)  DEFAULT 0,
-        perc_ipi_ult            NUMERIC(8,2)  DEFAULT 0,
+        perc_ipi_ult            NUMERIC(12,2)  DEFAULT 0,
         vlr_ipi_ult             NUMERIC(12,2) DEFAULT 0,
-        perc_icms_ult           NUMERIC(8,2)  DEFAULT 0,
+        perc_icms_ult           NUMERIC(12,2)  DEFAULT 0,
         vlr_icms_ult            NUMERIC(12,2) DEFAULT 0,
         custo_efetivo_ult_compra NUMERIC(12,4) DEFAULT 0,
         dias_sem_compra         NUMERIC(8,0)  DEFAULT 0,
@@ -153,14 +153,14 @@ async function runMigrations() {
         fornecedor_ante         VARCHAR(100),
         vlr_ante_compra         NUMERIC(12,4) DEFAULT 0,
         qtd_ante_compra         NUMERIC(14,2) DEFAULT 0,
-        variacao_ult_pen_pct    NUMERIC(10,2) DEFAULT 0,
-        variacao_ult_ante_pct   NUMERIC(10,2) DEFAULT 0,
+        variacao_ult_pen_pct    NUMERIC(14,2) DEFAULT 0,
+        variacao_ult_ante_pct   NUMERIC(14,2) DEFAULT 0,
         data_primeira_compra    DATE,
         status_produto          VARCHAR(30),
         media_mensal_qtd_cd     NUMERIC(14,2) DEFAULT 0,
         preco_medio_saida       NUMERIC(12,4) DEFAULT 0,
-        variacao_ult_vs_media_pct NUMERIC(10,2) DEFAULT 0,
-        margem_pct              NUMERIC(8,2)  DEFAULT 0,
+        variacao_ult_vs_media_pct NUMERIC(14,2) DEFAULT 0,
+        margem_pct              NUMERIC(12,2)  DEFAULT 0,
         lucro_bruto_6m          NUMERIC(14,2) DEFAULT 0,
         importado_em            TIMESTAMP DEFAULT NOW()
       );
@@ -203,6 +203,28 @@ async function runMigrations() {
     }
 
     console.log('✅ Migration OK — estoque_matriz pronta.');
+
+    // Ampliar campos NUMERIC que podem ter overflow
+    const alterCols = [
+      ['estoque_matriz', 'cobertura_meses_cd',      'NUMERIC(12,2)'],
+      ['estoque_matriz', 'cobertura_dias_cd',        'NUMERIC(12,0)'],
+      ['estoque_matriz', 'giro_estoque_cd',          'NUMERIC(12,2)'],
+      ['estoque_matriz', 'meses_com_saida_cd',       'NUMERIC(8,0)'],
+      ['estoque_matriz', 'variacao_ult_pen_pct',     'NUMERIC(14,2)'],
+      ['estoque_matriz', 'variacao_ult_ante_pct',    'NUMERIC(14,2)'],
+      ['estoque_matriz', 'variacao_ult_vs_media_pct','NUMERIC(14,2)'],
+      ['estoque_matriz', 'margem_pct',               'NUMERIC(12,2)'],
+      ['estoque_matriz', 'perc_ipi_ult',             'NUMERIC(12,2)'],
+      ['estoque_matriz', 'perc_icms_ult',            'NUMERIC(12,2)'],
+      ['estoque_filiais','cobertura_meses_filial',   'NUMERIC(12,2)'],
+      ['estoque_filiais','cobertura_dias_filial',    'NUMERIC(12,0)'],
+      ['estoque_filiais','giro_estoque_filial',      'NUMERIC(12,2)'],
+      ['estoque_filiais','margem_pct_filial',        'NUMERIC(12,2)'],
+    ];
+    for (const [table, col, type] of alterCols) {
+      await client.query(`ALTER TABLE ${table} ALTER COLUMN ${col} TYPE ${type}`).catch(() => {});
+    }
+    console.log('✅ Migration OK — campos NUMERIC ampliados.');
 
     // ── Tabela de clientes ────────────────────────────────────────────────────
     await client.query(`
